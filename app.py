@@ -10,34 +10,122 @@ from websocket import create_connection
 
 WS_URL = "wss://ws.binaryws.com/websockets/v3"
 
-st.set_page_config(page_title="Deriv Synthetic Analyzer Pro", layout="wide")
+
+st.set_page_config(
+    page_title="Deriv Synthetic Analyzer Pro",
+    layout="wide"
+)
+
+
+def make_request(payload, timeout=15):
+    ws = create_connection(
+        WS_URL,
+        timeout=timeout,
+        origin="https://deriv.com"
+    )
+    try:
+        ws.send(json.dumps(payload))
+        response = json.loads(ws.recv())
+    finally:
+        ws.close()
+
+    if "error" in response:
+        error = response["error"]
+        raise RuntimeError(
+            error.get("message", "Deriv API error")
+        )
+
+    return response
+
 
 @st.cache_data(ttl=300)
 def get_symbols():
-    ws = create_connection(WS_URL, timeout=10)
-    ws.send(json.dumps({"active_symbols": "brief"}))
-    response = json.loads(ws.recv())
-    ws.close()
-    if "error" in response:
-        raise RuntimeError(response["error"].get("message", "Deriv API error"))
+    response = make_request({
+        "active_symbols": "brief",
+        "product_type": "basic"
+    })
+
     return response.get("active_symbols", [])
 
+
 def fetch_ticks(symbol, count=1000):
-    ws = create_connection(WS_URL, timeout=15)
-    ws.send(json.dumps({
+    response = make_request({
         "ticks_history": symbol,
         "count": count,
         "end": "latest",
         "style": "ticks"
-    }))
-    response = json.loads(ws.recv())
-    ws.close()
-    if "error" in response:
-        raise RuntimeError(response["error"].get("message", "Deriv API error"))
-    h = response.get("history", {})
+    })
+
+    history = response.get("history", {})
+
     return pd.DataFrame({
-        "time": pd.to_datetime(h.get("times", []), unit="s"),
-        "price": pd.to_numeric(h.get("prices", []), errors="coerce")
+        "time": pd.to_datetime(
+            history.get("times", []),
+            unit="s"
+        ),
+        "price": pd.to_numeric(
+            history.get("prices", []),
+            errors="coerce"
+        )
+    }).dropna()WS_URL = "wss://ws.binaryws.com/websockets/v3"
+
+
+st.set_page_config(
+    page_title="Deriv Synthetic Analyzer Pro",
+    layout="wide"
+)
+
+
+def make_request(payload, timeout=15):
+    ws = create_connection(
+        WS_URL,
+        timeout=timeout,
+        origin="https://deriv.com"
+    )
+    try:
+        ws.send(json.dumps(payload))
+        response = json.loads(ws.recv())
+    finally:
+        ws.close()
+
+    if "error" in response:
+        error = response["error"]
+        raise RuntimeError(
+            error.get("message", "Deriv API error")
+        )
+
+    return response
+
+
+@st.cache_data(ttl=300)
+def get_symbols():
+    response = make_request({
+        "active_symbols": "brief",
+        "product_type": "basic"
+    })
+
+    return response.get("active_symbols", [])
+
+
+def fetch_ticks(symbol, count=1000):
+    response = make_request({
+        "ticks_history": symbol,
+        "count": count,
+        "end": "latest",
+        "style": "ticks"
+    })
+
+    history = response.get("history", {})
+
+    return pd.DataFrame({
+        "time": pd.to_datetime(
+            history.get("times", []),
+            unit="s"
+        ),
+        "price": pd.to_numeric(
+            history.get("prices", []),
+            errors="coerce"
+        )
     }).dropna()
 
 def add_indicators(df):
