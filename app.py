@@ -17,7 +17,6 @@ WS_URL = "wss://ws.binaryws.com/websockets/v3"
 
 def make_request(payload, timeout=15):
     ws = create_connection(
-        WS_URL,
         timeout=timeout,
         origin="https://deriv.com"
     )
@@ -65,7 +64,9 @@ def fetch_ticks(symbol, count=1000):
             history.get("prices", []),
             errors="coerce"
         )
-    }).dropna()WS_URL = "wss://ws.binaryws.com/websockets/v3"
+    }).dropna()
+    
+    ()WS_URL = "wss://ws.binaryws.com/websockets/v3"
 
 
 st.set_page_config(
