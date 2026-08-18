@@ -8,14 +8,12 @@ import plotly.graph_objects as go
 import streamlit as st
 from websocket import create_connection
 
-WS_URL = "wss://ws.binaryws.com/websockets/v3"
-
-
 st.set_page_config(
     page_title="Deriv Synthetic Analyzer Pro",
     layout="wide"
 )
 
+WS_URL = "wss://ws.binaryws.com/websockets/v3"
 
 def make_request(payload, timeout=15):
     ws = create_connection(
